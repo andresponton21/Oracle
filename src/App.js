@@ -1,58 +1,91 @@
-import React from 'react';
-import './App.css';
-import Web3 from 'web3';
-import { STOCK_ORACLE_ABI, STOCK_ORACLE_ADDRESS } from './quotecontract'
+import React, { useState, useEffect } from "react";
+import Web3 from "web3";
+import { STOCK_ORACLE_ABI, STOCK_ORACLE_ADDRESS } from "./quotecontract";
 
 
-class App extends React.Component {
-
+function App() {
  
-  constructor(props) {
+  const [data, setData] = useState("");
+  const [val, setVal] = useState("");
+  const [symbol, setSymbol] = useState("MSFT");
 
-      super(props);
+  const web3 = new Web3("http://localhost:8545")
+  const account = async ()=>{
+ var accounts = await web3.eth.getAccounts()
+  console.log("Account 0 = ", accounts[0] )}
 
-      this.state = {
-          items: [],
-          isLoaded: false
-      }
+  const stockQuote = new web3.eth.Contract(
+    STOCK_ORACLE_ABI,
+    STOCK_ORACLE_ADDRESS
+  );
 
-  }
-
+   const retval = async () => {
+    var getPrice = await stockQuote.methods.getStockPrice(web3.utils.fromAscii(val)).call();
+    var getVolume = await stockQuote.methods.getStockVolume(web3.utils.fromAscii(val)).call();
+    console.log(retval);
+   }
+  useEffect(() => {
+    fetch(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=71EBIKKDUVSFZU8P`
+    )
+      .then(res => res.json())
+      .then(res => {
+        setData(res["Global Quote"]);
+      });
+  }, [symbol]);
   
-  componentDidMount() {
 
-    fetch('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=MSFT&apikey=71EBIKKDUVSFZU8P')
-    .then(res => res.json())
-    .then((data) => {
-      this.setState({ quote: data["Global Quote"] })
-    })
-    .catch(console.log)
-
-
+  function handleChange(event) {
+    event.preventDefault();
+    setVal(event.target.value);
   }
 
- 
-  render() {
+  function onclickSearch(event) {
+    event.preventDefault();
+    setSymbol(val);
+  }
 
-      const { isLoaded, items } = this.state;
-
-      if (!isLoaded)
-          return <div>Loading...</div>;
-
-      return (
-          <div className="App">
-              <ul>
-                  {items.map(item => (
-                      <li key={item.id}>
-                          Name: {item.name} | Email: {item.email}
-                      </li>
-                  ))}
-              </ul>
+  return (
+    <div>
+      <h2>Stock Quotes</h2>
+      <div>
+        <form  >
+        Enter symbol: {''}
+          <input
+            onChange={handleChange}
+          />
+          <div>
+            <button  onClick={onclickSearch}>
+              Search Stock
+            </button>
           </div>
-      );
-
-  }
-
+        </form>
+        <div>
+            Symbol: {''}
+          <input
+            value={data["01. symbol"]}
+          ></input>
+        </div>
+        <div>
+        Price: {' '}
+          <input
+            value={data["05. price"]}
+          ></input>
+        </div>
+        <div>
+        Volume: {''}
+          <input
+            value={data["06. volume"]}
+          ></input>
+        </div>
+        {/* <div>
+            <button  onClick={onclickSet}>
+              Set Stock
+            </button>
+          </div> */}
+      </div>
+    </div>
+  );
 }
 
 export default App;
